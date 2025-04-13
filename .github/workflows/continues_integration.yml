@@ -26,4 +26,4 @@ jobs:
     - name: Build
       run: dotnet build Ghanavats.Domain.Factory.sln --configuration Release
     - name: Test
-      run: dotnet test tests/Ghanavats.Domain.Factory.Tests/Ghanavats.Domain.Factory.Tests.csproj
+      run: dotnet test Domain.Factory/tests/Ghanavats.Domain.Factory.Tests/Ghanavats.Domain.Factory.Tests.csproj
