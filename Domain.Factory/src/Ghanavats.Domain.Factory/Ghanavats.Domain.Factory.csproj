@@ -3,20 +3,20 @@
     <PropertyGroup>
         <Company>Ghanavas - https://ghanavats.co.uk</Company>
         <Authors>Saeed Ghanavat</Authors>
-        <Description>Provides fundamental building blocks for Domain-Driven Design (DDD),
-            including support for entities,
-            value objects, aggregate root tagging via attributes,
-            and domain event infrastructure.
+        <Description>A lightweight .NET library that implements the Factory pattern in line with Domain-Driven Design (DDD) principles. 
+            Ghanavats.Domain.Factory enables the creation of complex entities and aggregates through a configurable, 
+            reflection-based factory mechanism. Supports customisation via options to ignore or inject properties. 
+            Designed to enforce consistency, encapsulate construction logic, and reduce boilerplate in your domain layer.
         </Description>
 
         <PackageId>Ghanavats.Domain.Factory</PackageId>
         <Title>Ghanavats.Domain.Factory</Title>
-        <PackageTags>DDD;Domain-Driven Design;Entity;ValueObject;
-            AggregateRoot;DomainEvents;Clean Architecture;Primitives
+        <PackageTags>DDD, domain-driven-design, factory, 
+            aggregate-root, clean-architecture
         </PackageTags>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/ghanavat/Domain.Factory</RepositoryUrl>
-        <Version>1.0.0</Version>
+        <Version>1.0.1</Version>
 
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>

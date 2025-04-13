@@ -12,4 +12,8 @@
         <PackageReference Include="xunit.runner.visualstudio" />
         <PackageReference Include="Moq" />
     </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Ghanavats.Domain.Factory\Ghanavats.Domain.Factory.csproj" />
+    </ItemGroup>
 </Project>

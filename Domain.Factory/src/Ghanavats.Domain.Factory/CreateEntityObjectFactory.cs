@@ -1,23 +1,33 @@
 ﻿using System.Collections.Immutable;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Ghanavats.Domain.Factory.Abstractions;
 using Ghanavats.Domain.Factory.Abstractions.ActionOptions;
+using Ghanavats.Domain.Factory.Abstractions.Responses;
 using Ghanavats.Domain.Factory.Attributes;
 using Ghanavats.Domain.Factory.Extensions;
 using Ghanavats.Domain.Factory.StaticMembers;
 using Ghanavats.Domain.Primitives;
+using Ghanavats.Domain.Primitives.Attributes;
 
 namespace Ghanavats.Domain.Factory;
 
-internal class CreateEntityObjectFactory<TRequest, TResponse>
+public class CreateEntityObjectFactory<TRequest, TResponse>
     : MethodInfoTypeCache, IDomainFactory<TRequest, TResponse>
     where TRequest : class
     where TResponse : EntityBase
 {
     /// <inheritdoc/>
-    public TResponse? CreateEntityObject(TRequest request, Action<DomainFactoryOption>? action)
+    public DomainFactoryResponseModel<TResponse> CreateEntityObject(TRequest request, [Optional] Action<DomainFactoryOption>? action)
     {
-        //TODO: Validate the TResponse Entity type to ensure it has the correct Aggregate Attribute applied at class level
+        var response = new DomainFactoryResponseModel<TResponse>();
+        
+        if (!IsResponseAggregateRoot())
+        {
+            response.ErrorMessage = $"Operation is not allowed. The response type of {typeof(TResponse)} is not an Aggregate Root object.";
+            
+            return response;
+        }
         
         var cacheKey = $"{typeof(TResponse).FullName}.FactoryMethod";
 
@@ -31,7 +41,9 @@ internal class CreateEntityObjectFactory<TRequest, TResponse>
         var method = CachedMethodInfoCollection.TryGetValue(cacheKey, out var result) ? result : GetMethod();
         if (method is null)
         {
-            return null;
+            response.ErrorMessage = $"Could not get/find the factory method for the type of {typeof(TResponse)}.";
+            
+            return response;
         }
         
         CachedMethodInfoCollection[cacheKey] = method;
@@ -39,7 +51,9 @@ internal class CreateEntityObjectFactory<TRequest, TResponse>
         var constructorInfo = GetConstructor();
         if (constructorInfo is null)
         {
-            return null;
+            response.ErrorMessage = "Could not find a public constructor.";
+            
+            return response;
         }
 
         var parameters = PopulateParameterValues(request,
@@ -48,18 +62,26 @@ internal class CreateEntityObjectFactory<TRequest, TResponse>
 
         if (parameters.Length == 0)
         {
-            return null;
+            response.ErrorMessage = $"No parameters found in the request type of {typeof(TRequest)}.";
+            
+            return response;
         }
-
-        var entityObject = method.Invoke(constructorInfo.Invoke(null), parameters);
-        return (TResponse?)entityObject;
+        
+        var responseValue = (TResponse?)method.Invoke(constructorInfo.Invoke(null), parameters);
+        if (responseValue is null)
+        {
+            response.ErrorMessage = "Could not invoke the factory method with the given parameters.";
+            
+            return response;
+        }
+        
+        response.Value = responseValue;
+        return response;
     }
 
     private static MethodInfo? GetMethod()
     {
-        var responseType = typeof(TResponse);
-        
-        var method = responseType
+        var method = typeof(TResponse)
             .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
             .FirstOrDefault(x => x.GetCustomAttribute<FactoryMethodAttribute>() is not null
                                  && x.GetCustomAttribute<FactoryMethodAttribute>()?.FactoryMethodName?.ToString() ==
@@ -122,5 +144,10 @@ internal class CreateEntityObjectFactory<TRequest, TResponse>
                 propertySourceList.RemoveAt(index);
             }
         }
+    }
+
+    private static bool IsResponseAggregateRoot()
+    {
+        return typeof(TResponse).GetCustomAttributes<AggregateRootAttribute>().Any();
     }
 }
