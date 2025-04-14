@@ -61,6 +61,16 @@ CachedMethodInfoCollection[cacheKey] = method;
 ## 🚀 Usage
 ### ✅ Basic Usage
 
+First, register the Domain Factory dependency in your application:
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDomainFactory();
+```
+
+Then, a simple usage would be like this:
+
 ```csharp
 public class CreateSomethingHandler : ICommandHandler<CreateSomethingCommand, SomeResult<int>>
 {
