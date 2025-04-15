@@ -1,9 +1,8 @@
-﻿using System.Collections.Immutable;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
+using Domain.Factory.Library.Responses;
 using Ghanavats.Domain.Factory.Abstractions;
 using Ghanavats.Domain.Factory.Abstractions.ActionOptions;
-using Ghanavats.Domain.Factory.Abstractions.Responses;
 using Ghanavats.Domain.Factory.Attributes;
 using Ghanavats.Domain.Factory.Extensions;
 using Ghanavats.Domain.Factory.StaticMembers;
@@ -22,9 +21,9 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
     {
         var response = new DomainFactoryResponseModel<TResponse>();
         
-        if (!IsResponseAggregateRoot())
+        if (!IsResponseTypeAggregateRoot())
         {
-            response.ErrorMessage = $"Operation is not allowed. The response type of {typeof(TResponse)} is not an Aggregate Root object.";
+            DomainFactoryResponseModel<TResponse>.Failure($"Operation is not allowed. The response type of {typeof(TResponse)} is not an Aggregate Root object.");
             
             return response;
         }
@@ -41,7 +40,7 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
         var method = CachedMethodInfoCollection.TryGetValue(cacheKey, out var result) ? result : GetMethod();
         if (method is null)
         {
-            response.ErrorMessage = $"Could not get/find the factory method for the type of {typeof(TResponse)}.";
+            DomainFactoryResponseModel<TResponse>.Failure($"Could not get/find the factory method for the type {typeof(TResponse)}.");
             
             return response;
         }
@@ -51,7 +50,7 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
         var constructorInfo = GetConstructor();
         if (constructorInfo is null)
         {
-            response.ErrorMessage = "Could not find a public constructor.";
+            DomainFactoryResponseModel<TResponse>.Failure("Could not find a public constructor.");
             
             return response;
         }
@@ -62,7 +61,7 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
 
         if (parameters.Length == 0)
         {
-            response.ErrorMessage = $"No parameters found in the request type of {typeof(TRequest)}.";
+            DomainFactoryResponseModel<TResponse>.Failure($"No parameters found in the request type of {typeof(TRequest)}.");
             
             return response;
         }
@@ -70,12 +69,13 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
         var responseValue = (TResponse?)method.Invoke(constructorInfo.Invoke(null), parameters);
         if (responseValue is null)
         {
-            response.ErrorMessage = "Could not invoke the factory method with the given parameters.";
+            DomainFactoryResponseModel<TResponse>.Failure("Could not invoke the factory method with the given parameters.");
             
             return response;
         }
+
+        DomainFactoryResponseModel<TResponse>.Success(responseValue, PopulateResponseCache());
         
-        response.Value = responseValue;
         return response;
     }
 
@@ -95,6 +95,18 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
         return typeof(TResponse).GetConstructor(Type.EmptyTypes);
     }
 
+    private static string[] PopulateResponseCache()
+    {
+        var cacheItemsArray = new string[CachedMethodInfoCollection.Count];
+
+        foreach (var cachedMethodInfoItem in CachedMethodInfoCollection.Values)
+        {
+            cacheItemsArray = [cachedMethodInfoItem.Name];
+        }
+
+        return cacheItemsArray;
+    }
+
     /// <summary>
     /// Populates an argument list for the constructor to be invoked.
     /// </summary>
@@ -103,30 +115,36 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
     /// <param name="additionalProperties">List of the properties to be added to the iteration</param>
     /// <returns>Object array of parameter values in the order they were defined in the request type</returns>
     private static object[] PopulateParameterValues(TRequest request,
-        IImmutableList<string> ignoredProperties,
-        IImmutableDictionary<string, object> additionalProperties)
+        IReadOnlyCollection<string> ignoredProperties,
+        IReadOnlyDictionary<string, object> additionalProperties)
     {
-        var properties = typeof(TRequest).GetProperties().ToList();
+        ICollection<PropertyInfo> properties = typeof(TRequest).GetProperties();
 
         if (properties.Count == 0)
         {
             return [];
         }
 
-        RemoveIgnoredProperty(ignoredProperties, properties);
-
+        var ignoredPropertyList = ignoredProperties.ToList();
+        if (ignoredPropertyList.Count > 0)
+        {
+            RemoveIgnoredProperty(ignoredPropertyList, ref properties);
+        }
+        
         var objValues = new object[properties.Count];
+        var propertyList = properties.ToList();
+        
         for (var i = 0; i < objValues.Length; i++)
         {
-            objValues[i] = properties[i].GetValue(request).CheckForNull();
+            objValues[i] = propertyList[i].GetValue(request).CheckForNull();
 
-            if (properties[i].IsValueTypeNullable()
-                && properties[i].IsReferenceTypeNullable())
+            if (propertyList[i].IsValueTypeNullable()
+                && propertyList[i].IsReferenceTypeNullable())
             {
                 continue;
             }
 
-            var propertyName = properties[i].Name;
+            var propertyName = propertyList[i].Name;
 
             objValues[i].CheckForNull(() =>
                 new NullReferenceException($"Value of property {propertyName} cannot be null or empty."));
@@ -136,17 +154,19 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
             ? objValues
             : additionalProperties.Aggregate(objValues, (current, item) => current.Append(item.Value).ToArray());
 
-        void RemoveIgnoredProperty(IImmutableList<string> ignoredPropertyList, List<PropertyInfo> propertySourceList)
+        void RemoveIgnoredProperty(IEnumerable<string> ignoredPropertyCollection, ref ICollection<PropertyInfo> propertySourceCollection)
         {
-            foreach (var ignoredPropertyItem in ignoredPropertyList)
+            var propertySourceList = propertySourceCollection.ToList();
+            foreach (var ignoredPropertyItem in ignoredPropertyCollection)
             {
-                var index = propertySourceList.FindIndex(x => x.Name == ignoredPropertyItem);
-                propertySourceList.RemoveAt(index);
+                propertySourceList.RemoveAll(x => x.Name == ignoredPropertyItem);
             }
+
+            propertySourceCollection = propertySourceList;
         }
     }
 
-    private static bool IsResponseAggregateRoot()
+    private static bool IsResponseTypeAggregateRoot()
     {
         return typeof(TResponse).GetCustomAttributes<AggregateRootAttribute>().Any();
     }

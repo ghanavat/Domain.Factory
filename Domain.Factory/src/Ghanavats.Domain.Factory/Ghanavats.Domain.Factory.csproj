@@ -16,7 +16,7 @@
         </PackageTags>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/ghanavat/Domain.Factory</RepositoryUrl>
-        <Version>1.0.2</Version>
+        <Version>1.0.3</Version>
 
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -29,6 +29,10 @@
     
     <ItemGroup>
       <ProjectReference Include="..\..\..\Domain.Factory.Abstractions\src\Ghanavats.Domain.Factory.Abstractions\Ghanavats.Domain.Factory.Abstractions.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="Ghanavats.Domain.Primitives" />
     </ItemGroup>
 
 </Project>

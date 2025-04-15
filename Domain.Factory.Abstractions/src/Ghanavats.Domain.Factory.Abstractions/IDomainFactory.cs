@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
+using Domain.Factory.Library.Responses;
 using Ghanavats.Domain.Factory.Abstractions.ActionOptions;
-using Ghanavats.Domain.Factory.Abstractions.Responses;
 using Ghanavats.Domain.Primitives;
 
 namespace Ghanavats.Domain.Factory.Abstractions;

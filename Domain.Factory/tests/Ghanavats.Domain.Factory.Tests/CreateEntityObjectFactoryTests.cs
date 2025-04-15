@@ -24,6 +24,7 @@ public class CreateEntityObjectFactoryTests
         //Assert
         Assert.NotNull(actual);
         Assert.Null(actual.Value);
-        Assert.Equal("Operation is not allowed. The response type of Ghanavats.Domain.Factory.Tests.DummyData.DummyResponseEntity is not an Aggregate Root object.", actual.ErrorMessage);
+        Assert.Equal("Operation is not allowed. The response type of Ghanavats.Domain.Factory.Tests.DummyData.DummyResponseEntity is not an Aggregate Root object.",
+            actual.ErrorMessage);
     }
 }
