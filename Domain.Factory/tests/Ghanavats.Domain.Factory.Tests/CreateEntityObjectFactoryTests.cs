@@ -13,7 +13,7 @@ public class CreateEntityObjectFactoryTests
     }
     
     [Fact]
-    public void Test1()
+    public void CreateEntityObject_ShouldReturnCorrectResponseWithError_WhenResponseEntityIsNotAggregateRoot()
     {
         //Arrange
         var request = DummyCreateEntityObjectFactoryData.GetValidDummyRequest();

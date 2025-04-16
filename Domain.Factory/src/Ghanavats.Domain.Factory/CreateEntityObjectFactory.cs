@@ -23,9 +23,8 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
         
         if (!IsResponseTypeAggregateRoot())
         {
-            DomainFactoryResponseModel<TResponse>.Failure($"Operation is not allowed. The response type of {typeof(TResponse)} is not an Aggregate Root object.");
-            
-            return response;
+            return DomainFactoryResponseModel<TResponse>
+                .Failure($"Operation is not allowed. The response type of {typeof(TResponse)} is not an Aggregate Root object.");
         }
         
         var cacheKey = $"{typeof(TResponse).FullName}.FactoryMethod";
@@ -40,9 +39,8 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
         var method = CachedMethodInfoCollection.TryGetValue(cacheKey, out var result) ? result : GetMethod();
         if (method is null)
         {
-            DomainFactoryResponseModel<TResponse>.Failure($"Could not get/find the factory method for the type {typeof(TResponse)}.");
-            
-            return response;
+            return DomainFactoryResponseModel<TResponse>
+                .Failure($"Could not get/find the factory method for the type {typeof(TResponse)}.");
         }
         
         CachedMethodInfoCollection[cacheKey] = method;
@@ -61,9 +59,8 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
 
         if (parameters.Length == 0)
         {
-            DomainFactoryResponseModel<TResponse>.Failure($"No parameters found in the request type of {typeof(TRequest)}.");
-            
-            return response;
+            return DomainFactoryResponseModel<TResponse>
+                .Failure($"No parameters found in the request type of {typeof(TRequest)}.");
         }
         
         var responseValue = (TResponse?)method.Invoke(constructorInfo.Invoke(null), parameters);
