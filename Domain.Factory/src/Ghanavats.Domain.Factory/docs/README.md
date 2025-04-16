@@ -105,7 +105,7 @@ public class CreateSomethingHandler : ICommandHandler<CreateSomethingCommand, So
     {
         var propertyValue = "ExampleValueForNewProperty";
 
-        var myEntity = _domainFactory.CreateEntityObject(request, option =>
+        var domainFactoryResponse = _domainFactory.CreateEntityObject(request, option =>
         {
             option.IgnoreProperties([
                 nameof(request.SomePropertyOne),
@@ -116,7 +116,7 @@ public class CreateSomethingHandler : ICommandHandler<CreateSomethingCommand, So
             {
                 { "SomePropertyThree", propertyValue },
                 { "SomePropertyFour", 2025 }
-            }.ToImmutableDictionary());
+            });
         });
 
         // Use your customised domain entity...
