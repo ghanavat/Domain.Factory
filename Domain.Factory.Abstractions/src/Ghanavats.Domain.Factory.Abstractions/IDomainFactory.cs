@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using Domain.Factory.Library.Responses;
 using Ghanavats.Domain.Factory.Abstractions.ActionOptions;
 using Ghanavats.Domain.Primitives;
 
@@ -23,7 +22,7 @@ public interface IDomainFactory<in TRequest, TResponse>
     /// <param name="request">The request that is used to create an entity object with</param>
     /// <param name="action">Optional action to enforce further behaviour or options</param>
     /// <returns>An instance of <typeparamref name="TResponse"/></returns>
-    DomainFactoryResponseModel<TResponse> CreateEntityObject(TRequest request, [Optional] Action<DomainFactoryOption> action);
+    Responses.DomainFactoryResponseModel<TResponse> CreateEntityObject(TRequest request, [Optional] Action<DomainFactoryOption> action);
 }
 
 /* README

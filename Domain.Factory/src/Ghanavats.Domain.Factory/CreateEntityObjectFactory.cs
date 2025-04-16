@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
-using Domain.Factory.Library.Responses;
 using Ghanavats.Domain.Factory.Abstractions;
 using Ghanavats.Domain.Factory.Abstractions.ActionOptions;
+using Ghanavats.Domain.Factory.Abstractions.Responses;
 using Ghanavats.Domain.Factory.Attributes;
 using Ghanavats.Domain.Factory.Extensions;
 using Ghanavats.Domain.Factory.StaticMembers;

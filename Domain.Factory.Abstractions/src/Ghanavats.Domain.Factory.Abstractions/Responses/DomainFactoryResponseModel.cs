@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace Domain.Factory.Library.Responses;
+namespace Ghanavats.Domain.Factory.Abstractions.Responses;
 
 public class DomainFactoryResponseModel<TResponse>
 {

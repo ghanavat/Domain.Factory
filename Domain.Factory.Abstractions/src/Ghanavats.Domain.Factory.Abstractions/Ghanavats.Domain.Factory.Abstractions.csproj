@@ -30,9 +30,5 @@
     <ItemGroup>
       <PackageReference Include="Ghanavats.Domain.Primitives" />
     </ItemGroup>
-    
-    <ItemGroup>
-      <ProjectReference Include="..\..\..\Domain.Factory.Library\Domain.Factory.Library.csproj" />
-    </ItemGroup>
 
 </Project>
