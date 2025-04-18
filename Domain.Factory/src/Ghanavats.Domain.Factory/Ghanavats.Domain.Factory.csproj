@@ -33,6 +33,7 @@
     
     <ItemGroup>
       <PackageReference Include="Ghanavats.Domain.Primitives" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
     </ItemGroup>
 
 </Project>

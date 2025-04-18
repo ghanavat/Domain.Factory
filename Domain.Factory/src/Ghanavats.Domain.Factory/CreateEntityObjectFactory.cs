@@ -3,106 +3,126 @@ using System.Runtime.InteropServices;
 using Ghanavats.Domain.Factory.Abstractions;
 using Ghanavats.Domain.Factory.Abstractions.ActionOptions;
 using Ghanavats.Domain.Factory.Abstractions.Responses;
-using Ghanavats.Domain.Factory.Attributes;
 using Ghanavats.Domain.Factory.Extensions;
-using Ghanavats.Domain.Factory.StaticMembers;
+using Ghanavats.Domain.Factory.Handlers;
 using Ghanavats.Domain.Primitives;
 using Ghanavats.Domain.Primitives.Attributes;
 
 namespace Ghanavats.Domain.Factory;
 
 public class CreateEntityObjectFactory<TRequest, TResponse>
-    : MethodInfoTypeCache, IDomainFactory<TRequest, TResponse>
+    : DomainFactoryBase, IDomainFactory<TRequest, TResponse>
     where TRequest : class
     where TResponse : EntityBase
 {
+    private readonly IFactoryMethodHandler _factoryMethodHandler;
+    private readonly IReadCache _readCache;
+
+    public CreateEntityObjectFactory(IFactoryMethodHandler factoryMethodHandler, IReadCache readCache)
+    {
+        _factoryMethodHandler = factoryMethodHandler.CheckForNull();
+        _readCache = readCache.CheckForNull();
+    }
+
     /// <inheritdoc/>
     public DomainFactoryResponseModel<TResponse> CreateEntityObject(TRequest request, [Optional] Action<DomainFactoryOption>? action)
     {
-        var response = new DomainFactoryResponseModel<TResponse>();
-        
         if (!IsResponseTypeAggregateRoot())
         {
             return DomainFactoryResponseModel<TResponse>
-                .Failure($"Operation is not allowed. The response type of {typeof(TResponse)} is not an Aggregate Root object.");
+                .Failure($"Operation is not allowed. The response type {typeof(TResponse).Name} is not an Aggregate Root.");
         }
         
-        var cacheKey = $"{typeof(TResponse).FullName}.FactoryMethod";
+        var option = new DomainFactoryOption();
+        action?.Invoke(option);
 
-        var domainFactoryOption = new DomainFactoryOption();
-        if (action is not null)
-        {
-            domainFactoryOption = new DomainFactoryOption();
-            action(domainFactoryOption);
-        }
-        
-        var method = CachedMethodInfoCollection.TryGetValue(cacheKey, out var result) ? result : GetMethod();
-        if (method is null)
+        var factoryMethod = _factoryMethodHandler.GetFactoryMethod(typeof(TResponse));
+        if (factoryMethod is null)
         {
             return DomainFactoryResponseModel<TResponse>
-                .Failure($"Could not get/find the factory method for the type {typeof(TResponse)}.");
+                .Failure($"Could not get/find the factory method for type {typeof(TResponse).Name}.");
         }
         
-        CachedMethodInfoCollection[cacheKey] = method;
+        // var cachedMethodInfo = _cacheProvider.Get(CacheKey);
+        //
+        // var method = cachedMethodInfo.ToString() != string.Empty ? cachedMethodInfo : GetMethod();
         
-        var constructorInfo = GetConstructor();
+        //var method = CachedMethodInfoCollection.TryGetValue(CacheKey, out var result) ? result : GetMethod();
+        // if (method is null 
+        //     || method.GetType() != typeof(MethodInfo))
+        // {
+        //     return DomainFactoryResponseModel<TResponse>
+        //         .Failure($"Could not get/find the factory method for the type {typeof(TResponse).Name}.");
+        // }
+        //
+        // _cacheProvider.Insert(CacheKey, method);
+        
+        //CachedMethodInfoCollection[cacheKey] = method;
+        
+        var constructorInfo = typeof(TResponse).GetConstructor(Type.EmptyTypes);
         if (constructorInfo is null)
         {
-            DomainFactoryResponseModel<TResponse>.Failure("Could not find a public constructor.");
-            
-            return response;
+            return DomainFactoryResponseModel<TResponse>
+                .Failure("Could not find a public constructor.");
         }
 
         var parameters = PopulateParameterValues(request,
-            domainFactoryOption.PropertyInfoItems,
-            domainFactoryOption.AdditionalProperties);
+            option.PropertyInfoItems,
+            option.AdditionalProperties);
 
         if (parameters.Length == 0)
         {
             return DomainFactoryResponseModel<TResponse>
-                .Failure($"No parameters found in the request type of {typeof(TRequest)}.");
+                .Failure($"No parameters found in the request type {typeof(TRequest).Name}.");
         }
         
-        var responseValue = (TResponse?)method.Invoke(constructorInfo.Invoke(null), parameters);
+        var responseValue = (TResponse?)factoryMethod.Invoke(constructorInfo.Invoke(null), parameters);
         if (responseValue is null)
         {
-            DomainFactoryResponseModel<TResponse>.Failure("Could not invoke the factory method with the given parameters.");
-            
-            return response;
+            return DomainFactoryResponseModel<TResponse>
+                .Failure("Could not invoke the factory method with the given parameters.");
         }
 
-        DomainFactoryResponseModel<TResponse>.Success(responseValue, PopulateResponseCache());
-        
-        return response;
+        return DomainFactoryResponseModel<TResponse>
+            .Success(responseValue, _readCache.Get($"{typeof(TResponse).Name}.FactoryMethod"));
     }
 
-    private static MethodInfo? GetMethod()
-    {
-        var method = typeof(TResponse)
-            .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
-            .FirstOrDefault(x => x.GetCustomAttribute<FactoryMethodAttribute>() is not null
-                                 && x.GetCustomAttribute<FactoryMethodAttribute>()?.FactoryMethodName?.ToString() ==
-                                 typeof(TResponse).Name);
-        
-        return method ?? null;
-    }
+    // private static MethodInfo? GetMethod()
+    // {
+    //     var method = typeof(TResponse)
+    //         .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
+    //         .FirstOrDefault(x =>
+    //         {
+    //             if (x.GetCustomAttribute<FactoryMethodAttribute>() is null) return false;
+    //             
+    //             var factoryMethodName = x.GetCustomAttribute<FactoryMethodAttribute>()?.FactoryMethodName?.ToString();
+    //             if (!string.IsNullOrWhiteSpace(factoryMethodName))
+    //             {
+    //                 return factoryMethodName == typeof(TResponse).Name;
+    //             }
+    //
+    //             return true;
+    //         });
+    //     
+    //     return method ?? null;
+    // }
 
-    private static ConstructorInfo? GetConstructor()
-    {
-        return typeof(TResponse).GetConstructor(Type.EmptyTypes);
-    }
+    // private static ConstructorInfo? GetConstructor()
+    // {
+    //     return typeof(TResponse).GetConstructor(Type.EmptyTypes);
+    // }
 
-    private static string[] PopulateResponseCache()
-    {
-        var cacheItemsArray = new string[CachedMethodInfoCollection.Count];
-
-        foreach (var cachedMethodInfoItem in CachedMethodInfoCollection.Values)
-        {
-            cacheItemsArray = [cachedMethodInfoItem.Name];
-        }
-
-        return cacheItemsArray;
-    }
+    // private static string[] PopulateResponseCache()
+    // {
+    //     var cacheItemsArray = new string[CachedMethodInfoCollection.Count];
+    //
+    //     foreach (var cachedMethodInfoItem in CachedMethodInfoCollection.Values)
+    //     {
+    //         cacheItemsArray = [cachedMethodInfoItem.Name];
+    //     }
+    //
+    //     return cacheItemsArray;
+    // }
 
     /// <summary>
     /// Populates an argument list for the constructor to be invoked.
@@ -115,7 +135,7 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
         IReadOnlyCollection<string> ignoredProperties,
         IReadOnlyDictionary<string, object> additionalProperties)
     {
-        ICollection<PropertyInfo> properties = typeof(TRequest).GetProperties();
+        ICollection<PropertyInfo> properties = request.GetType().GetProperties();
 
         if (properties.Count == 0)
         {

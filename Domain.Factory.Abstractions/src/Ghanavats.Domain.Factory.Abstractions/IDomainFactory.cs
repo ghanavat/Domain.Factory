@@ -25,6 +25,8 @@ public interface IDomainFactory<in TRequest, TResponse>
     Responses.DomainFactoryResponseModel<TResponse> CreateEntityObject(TRequest request, [Optional] Action<DomainFactoryOption> action);
 }
 
+// TODO: Move these elsewhere!
+
 /* README
  Creation of an object can be a major operation in itself, 
  but complex assembly operations do not fit the responsibility of the created objects.

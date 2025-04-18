@@ -1,4 +1,6 @@
-﻿namespace Ghanavats.Domain.Factory.Attributes;
+﻿using System.Runtime.InteropServices;
+
+namespace Ghanavats.Domain.Factory.Attributes;
 
 /// <summary>
 /// To mark a factory method.
@@ -19,7 +21,7 @@ public class FactoryMethodAttribute : Attribute
     /// </summary>
     /// <param name="factoryMethodName">An optional parameter to indicate what aggregate root this attribute belongs to. 
     /// It can be used to look up the factory method in the aggregate root class</param>
-    public FactoryMethodAttribute(string? factoryMethodName = null)
+    public FactoryMethodAttribute([Optional] string factoryMethodName)
     {
         if (!string.IsNullOrWhiteSpace(factoryMethodName))
         {

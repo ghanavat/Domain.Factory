@@ -1,18 +1,16 @@
-using System.Collections.Immutable;
-
 namespace Ghanavats.Domain.Factory.Abstractions.Responses;
 
-public class DomainFactoryResponseModel<TResponse>
+public sealed class DomainFactoryResponseModel<TResponse>
 {
     public TResponse? Value { get; private init; }
-    public ImmutableArray<string> Cache { get; init; } = [];
+    public object? Cache { get; init; }
     public string ErrorMessage { get; private init; } = string.Empty;
     
-    public static DomainFactoryResponseModel<TResponse> Success(TResponse value, IEnumerable<string> cache)
+    public static DomainFactoryResponseModel<TResponse> Success(TResponse value, object? cache)
         => new()
         {
             Value = value,
-            Cache = [..cache],
+            Cache = cache,
             ErrorMessage = string.Empty
         };
 
@@ -20,7 +18,7 @@ public class DomainFactoryResponseModel<TResponse>
         => new()
         {
             Value = default,
-            Cache = [],
+            Cache = null,
             ErrorMessage = errorMessage
         };
 }
