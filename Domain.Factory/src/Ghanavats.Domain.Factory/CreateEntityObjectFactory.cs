@@ -11,7 +11,7 @@ using Ghanavats.Domain.Primitives.Attributes;
 namespace Ghanavats.Domain.Factory;
 
 public class CreateEntityObjectFactory<TRequest, TResponse>
-    : DomainFactoryBase, IDomainFactory<TRequest, TResponse>
+    : IDomainFactory<TRequest, TResponse>
     where TRequest : class
     where TResponse : EntityBase
 {
