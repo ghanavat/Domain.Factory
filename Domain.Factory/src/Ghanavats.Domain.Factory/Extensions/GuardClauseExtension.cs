@@ -6,6 +6,7 @@ namespace Ghanavats.Domain.Factory.Extensions;
 /// <summary>
 /// Guard clause extension.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public static class GuardClauseExtension
 {
     private const string StandardArgumentNullMessage = "Argument cannot be null or empty.";

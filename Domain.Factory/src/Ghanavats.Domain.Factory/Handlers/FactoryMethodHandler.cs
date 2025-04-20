@@ -18,7 +18,7 @@ public class FactoryMethodHandler : IFactoryMethodHandler
     {
         var cachedMethodInfo = _cacheProvider.Get($"{type.Name}.FactoryMethod");
 
-        var method = cachedMethodInfo.ToString() != string.Empty ? cachedMethodInfo : GetMethod(type);
+        var method = cachedMethodInfo.ToString() != string.Empty ? cachedMethodInfo : GetMethod();
         
         if (method is null 
             || method.GetType() != typeof(MethodInfo))
@@ -27,32 +27,31 @@ public class FactoryMethodHandler : IFactoryMethodHandler
         }
         
         return (MethodInfo?)method;
-    }
-    
-    private MethodInfo? GetMethod(Type type)
-    {
-        var method = type
-            .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
-            .FirstOrDefault(x =>
-            {
-                if (x.GetCustomAttribute<FactoryMethodAttribute>() is null) return false;
-                
-                var factoryMethodName = x.GetCustomAttribute<FactoryMethodAttribute>()?.FactoryMethodName?.ToString();
-                if (!string.IsNullOrWhiteSpace(factoryMethodName))
-                {
-                    return factoryMethodName == type.Name;
-                }
-
-                return true;
-            });
-
-        if (method is null)
-        {
-            return null;
-        }
         
-        _cacheProvider.Insert($"{type.Name}.FactoryMethod", method);
-        return method;
+        MethodInfo? GetMethod()
+        {
+            method = type
+                .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
+                .FirstOrDefault(x =>
+                {
+                    if (x.GetCustomAttribute<FactoryMethodAttribute>() is null) return false;
+                
+                    var factoryMethodName = x.GetCustomAttribute<FactoryMethodAttribute>()?.FactoryMethodName?.ToString();
+                    if (!string.IsNullOrWhiteSpace(factoryMethodName))
+                    {
+                        return factoryMethodName == type.Name;
+                    }
 
+                    return true;
+                });
+
+            if (method is null)
+            {
+                return null;
+            }
+        
+            _cacheProvider.Insert($"{type.Name}.FactoryMethod", method);
+            return (MethodInfo?)method;
+        }
     }
 }

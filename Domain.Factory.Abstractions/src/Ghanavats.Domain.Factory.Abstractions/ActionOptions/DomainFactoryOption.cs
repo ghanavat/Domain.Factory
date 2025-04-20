@@ -7,7 +7,7 @@ public class DomainFactoryOption
     private readonly List<string> _ignorePropertyItems = [];
     private readonly Dictionary<string, object> _additionalPropertyItems = [];
     
-    public IReadOnlyCollection<string> PropertyInfoItems => _ignorePropertyItems.AsReadOnly();
+    public IReadOnlyCollection<string> IgnorePropertiesCollection => _ignorePropertyItems.AsReadOnly();
     public IReadOnlyDictionary<string, object> AdditionalProperties => _additionalPropertyItems.AsReadOnly();
     
     /// <summary>

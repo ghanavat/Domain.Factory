@@ -35,29 +35,13 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
         
         var option = new DomainFactoryOption();
         action?.Invoke(option);
-
+        
         var factoryMethod = _factoryMethodHandler.GetFactoryMethod(typeof(TResponse));
         if (factoryMethod is null)
         {
             return DomainFactoryResponseModel<TResponse>
                 .Failure($"Could not get/find the factory method for type {typeof(TResponse).Name}.");
         }
-        
-        // var cachedMethodInfo = _cacheProvider.Get(CacheKey);
-        //
-        // var method = cachedMethodInfo.ToString() != string.Empty ? cachedMethodInfo : GetMethod();
-        
-        //var method = CachedMethodInfoCollection.TryGetValue(CacheKey, out var result) ? result : GetMethod();
-        // if (method is null 
-        //     || method.GetType() != typeof(MethodInfo))
-        // {
-        //     return DomainFactoryResponseModel<TResponse>
-        //         .Failure($"Could not get/find the factory method for the type {typeof(TResponse).Name}.");
-        // }
-        //
-        // _cacheProvider.Insert(CacheKey, method);
-        
-        //CachedMethodInfoCollection[cacheKey] = method;
         
         var constructorInfo = typeof(TResponse).GetConstructor(Type.EmptyTypes);
         if (constructorInfo is null)
@@ -67,7 +51,7 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
         }
 
         var parameters = PopulateParameterValues(request,
-            option.PropertyInfoItems,
+            option.IgnorePropertiesCollection,
             option.AdditionalProperties);
 
         if (parameters.Length == 0)
@@ -86,44 +70,7 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
         return DomainFactoryResponseModel<TResponse>
             .Success(responseValue, _readCache.Get($"{typeof(TResponse).Name}.FactoryMethod"));
     }
-
-    // private static MethodInfo? GetMethod()
-    // {
-    //     var method = typeof(TResponse)
-    //         .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
-    //         .FirstOrDefault(x =>
-    //         {
-    //             if (x.GetCustomAttribute<FactoryMethodAttribute>() is null) return false;
-    //             
-    //             var factoryMethodName = x.GetCustomAttribute<FactoryMethodAttribute>()?.FactoryMethodName?.ToString();
-    //             if (!string.IsNullOrWhiteSpace(factoryMethodName))
-    //             {
-    //                 return factoryMethodName == typeof(TResponse).Name;
-    //             }
-    //
-    //             return true;
-    //         });
-    //     
-    //     return method ?? null;
-    // }
-
-    // private static ConstructorInfo? GetConstructor()
-    // {
-    //     return typeof(TResponse).GetConstructor(Type.EmptyTypes);
-    // }
-
-    // private static string[] PopulateResponseCache()
-    // {
-    //     var cacheItemsArray = new string[CachedMethodInfoCollection.Count];
-    //
-    //     foreach (var cachedMethodInfoItem in CachedMethodInfoCollection.Values)
-    //     {
-    //         cacheItemsArray = [cachedMethodInfoItem.Name];
-    //     }
-    //
-    //     return cacheItemsArray;
-    // }
-
+    
     /// <summary>
     /// Populates an argument list for the constructor to be invoked.
     /// </summary>
@@ -131,7 +78,7 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
     /// <param name="ignoredProperties">List of the properties to be ignored from the iteration</param>
     /// <param name="additionalProperties">List of the properties to be added to the iteration</param>
     /// <returns>Object array of parameter values in the order they were defined in the request type</returns>
-    private static object[] PopulateParameterValues(TRequest request,
+    private static object?[] PopulateParameterValues(TRequest request,
         IReadOnlyCollection<string> ignoredProperties,
         IReadOnlyDictionary<string, object> additionalProperties)
     {
@@ -148,28 +95,26 @@ public class CreateEntityObjectFactory<TRequest, TResponse>
             RemoveIgnoredProperty(ignoredPropertyList, ref properties);
         }
         
-        var objValues = new object[properties.Count];
+        var propertyValues = new object?[properties.Count];
         var propertyList = properties.ToList();
         
-        for (var i = 0; i < objValues.Length; i++)
+        for (var i = 0; i < propertyList.Count; i++)
         {
-            objValues[i] = propertyList[i].GetValue(request).CheckForNull();
-
-            if (propertyList[i].IsValueTypeNullable()
-                && propertyList[i].IsReferenceTypeNullable())
+            if (propertyList[i].GetValue(request) is null 
+                && propertyList[i].IsNullablePropertyType())
             {
+                propertyValues[i] = null;
                 continue;
             }
-
+            
             var propertyName = propertyList[i].Name;
-
-            objValues[i].CheckForNull(() =>
+            propertyValues[i] = propertyList[i].GetValue(request).CheckForNull(() =>
                 new NullReferenceException($"Value of property {propertyName} cannot be null or empty."));
         }
 
         return additionalProperties.Count <= 0
-            ? objValues
-            : additionalProperties.Aggregate(objValues, (current, item) => current.Append(item.Value).ToArray());
+            ? propertyValues
+            : additionalProperties.Aggregate(propertyValues, (current, item) => current.Append(item.Value).ToArray());
 
         void RemoveIgnoredProperty(IEnumerable<string> ignoredPropertyCollection, ref ICollection<PropertyInfo> propertySourceCollection)
         {
