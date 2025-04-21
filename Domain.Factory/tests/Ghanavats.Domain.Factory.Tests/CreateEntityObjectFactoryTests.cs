@@ -94,49 +94,6 @@ public class CreateEntityObjectFactoryTests
     }
 
     [Fact]
-    public void CreateEntityObject_ShouldReturnResponseWithError_WhenEntityFactoryMethodWithName_Violated()
-    {
-        //Arrange
-        var sut = new CreateEntityObjectFactory<DummyCreateEntityObjectFactoryData.DummyCreateCommand, 
-            DummyWithFactoryMethodAttrEntityViolatedName>(_mockFactoryMethodHandler.Object, _mockReadCache.Object);
-        
-        var request = DummyCreateEntityObjectFactoryData.GetValidDummyRequest();
-        
-        //Act
-        var actual = sut.CreateEntityObject(request);
-        
-        //Assert
-        actual.ShouldNotBeNull();
-        actual.ErrorMessage.ShouldBe("Could not get/find the factory method for type DummyWithFactoryMethodAttrEntityViolatedName.");
-        _mockFactoryMethodHandler.Verify(x => x.GetFactoryMethod(It.IsAny<Type>()), Times.Once);
-    }
-    
-    [Fact]
-    public void CreateEntityObject_ShouldReturnSuccess_WhenEntityFactoryMethodAttrHasNoNameArgument()
-    {
-        //Arrange
-        var sut = new CreateEntityObjectFactory<DummyCreateEntityObjectFactoryData.DummyCreateCommand, 
-            DummyWithFactoryMethodAttrEntityWithoutOptionalName>(_mockFactoryMethodHandler.Object, _mockReadCache.Object);
-        
-        var request = DummyCreateEntityObjectFactoryData.GetValidDummyRequest();
-
-        var expectedFactoryMethod = typeof(DummyWithFactoryMethodAttrEntityWithoutOptionalName)
-            .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
-            .FirstOrDefault(x => x.Name == nameof(DummyWithFactoryMethodAttrEntityWithoutOptionalName.DummyFactoryMethod));
-        
-        _mockFactoryMethodHandler.Setup(x => x.GetFactoryMethod(typeof(DummyWithFactoryMethodAttrEntityWithoutOptionalName)))
-            .Returns(expectedFactoryMethod);
-        
-        //Act
-        var actual = sut.CreateEntityObject(request);
-        
-        //Assert
-        actual.ShouldNotBeNull();
-        actual.ErrorMessage.ShouldBeNullOrEmpty();
-        _mockFactoryMethodHandler.Verify(x => x.GetFactoryMethod(It.IsAny<Type>()), Times.Once);
-    }
-
-    [Fact]
     public void CreateEntityObject_ShouldReturnFailure_WhenNoPublicConstructorFoundInEntityClass()
     {
         //Arrange

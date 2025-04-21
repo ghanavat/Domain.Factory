@@ -14,6 +14,7 @@ public static class DomainFactoryExtensions
         serviceCollection.AddScoped(typeof(IDomainFactory<,>), typeof(CreateEntityObjectFactory<,>));
         serviceCollection.AddScoped<IFactoryMethodHandler, FactoryMethodHandler>();
         serviceCollection.AddScoped<ICacheProvider, CacheProvider>();
+        serviceCollection.AddScoped<IReadCache, CacheProvider>();
         serviceCollection.AddMemoryCache(options =>
         {
             options.ExpirationScanFrequency = TimeSpan.FromHours(1);
