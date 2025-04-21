@@ -14,18 +14,18 @@ public class FactoryMethodAttribute : Attribute
     /// <summary>
     /// String parameter that is used to mark the factory method with its parent class name
     /// </summary>
-    public string? FactoryMethodName { get; private set; }
+    public string? FactoryMethodFor { get; private set; }
 
     /// <summary>
     /// The custom attribute constructor
     /// </summary>
-    /// <param name="factoryMethodName">An optional parameter to indicate what aggregate root this attribute belongs to. 
+    /// <param name="factoryMethodFor">An optional parameter to indicate what aggregate root this attribute belongs to. 
     /// It can be used to look up the factory method in the aggregate root class</param>
-    public FactoryMethodAttribute([Optional] string factoryMethodName)
+    public FactoryMethodAttribute([Optional] string factoryMethodFor)
     {
-        if (!string.IsNullOrWhiteSpace(factoryMethodName))
+        if (!string.IsNullOrWhiteSpace(factoryMethodFor))
         {
-            FactoryMethodName = factoryMethodName;
+            FactoryMethodFor = factoryMethodFor;
         }
     }
 }

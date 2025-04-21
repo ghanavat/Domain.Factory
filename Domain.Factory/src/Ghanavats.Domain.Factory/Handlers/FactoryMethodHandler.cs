@@ -19,13 +19,7 @@ public class FactoryMethodHandler : IFactoryMethodHandler
         var cachedMethodInfo = _cacheProvider.Get($"{type.Name}.FactoryMethod");
 
         var method = cachedMethodInfo.ToString() != string.Empty ? cachedMethodInfo : GetMethod();
-        
-        if (method is null 
-            || method.GetType() != typeof(MethodInfo))
-        {
-            return null;
-        }
-        
+
         return (MethodInfo?)method;
         
         MethodInfo? GetMethod()
@@ -34,12 +28,15 @@ public class FactoryMethodHandler : IFactoryMethodHandler
                 .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
                 .FirstOrDefault(x =>
                 {
-                    if (x.GetCustomAttribute<FactoryMethodAttribute>() is null) return false;
-                
-                    var factoryMethodName = x.GetCustomAttribute<FactoryMethodAttribute>()?.FactoryMethodName?.ToString();
-                    if (!string.IsNullOrWhiteSpace(factoryMethodName))
+                    if (x.GetCustomAttribute<FactoryMethodAttribute>() is null)
                     {
-                        return factoryMethodName == type.Name;
+                        return false;
+                    }
+                
+                    var factoryMethodFor = x.GetCustomAttribute<FactoryMethodAttribute>()?.FactoryMethodFor?.ToString();
+                    if (!string.IsNullOrWhiteSpace(factoryMethodFor))
+                    {
+                        return factoryMethodFor == type.Name;
                     }
 
                     return true;

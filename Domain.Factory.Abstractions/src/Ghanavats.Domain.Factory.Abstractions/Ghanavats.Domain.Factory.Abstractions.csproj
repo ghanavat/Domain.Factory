@@ -16,7 +16,7 @@
         </PackageTags>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/ghanavat/Domain.Factory</RepositoryUrl>
-        <Version>1.0.3</Version>
+        <Version>1.0.4</Version>
 
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>

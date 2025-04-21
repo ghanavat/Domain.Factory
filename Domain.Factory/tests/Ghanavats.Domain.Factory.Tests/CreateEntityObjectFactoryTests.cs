@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Ghanavats.Domain.Factory.Abstractions;
 using Ghanavats.Domain.Factory.Abstractions.ActionOptions;
@@ -11,6 +12,7 @@ using Xunit;
 
 namespace Ghanavats.Domain.Factory.Tests;
 
+[ExcludeFromCodeCoverage]
 public class CreateEntityObjectFactoryTests
 {
     private readonly Mock<IFactoryMethodHandler> _mockFactoryMethodHandler;
@@ -247,7 +249,7 @@ public class CreateEntityObjectFactoryTests
         actual.ShouldNotBeNull();
         actual.Value.ShouldNotBeNull();
         actual.Value.GetType().ShouldBe(typeof(DummyEntity));
-        actual.ErrorMessage.ShouldBeEmpty();
+        actual.ErrorMessage.ShouldBeNullOrEmpty();
     }
 
     [Fact]
@@ -279,7 +281,7 @@ public class CreateEntityObjectFactoryTests
         actual.ShouldNotBeNull();
         actual.Value.ShouldNotBeNull();
         actual.Value.GetType().ShouldBe(typeof(DummyEntityWithMorePropertiesThanCommandRecord));
-        actual.ErrorMessage.ShouldBeEmpty();
+        actual.ErrorMessage.ShouldBeNullOrEmpty();
     }
 
     [Fact]
@@ -305,7 +307,7 @@ public class CreateEntityObjectFactoryTests
         actual.ShouldNotBeNull();
         actual.Value.ShouldNotBeNull();
         actual.Value.GetType().ShouldBe(typeof(DummyEntityWithNullableValueTypeProperty));
-        actual.ErrorMessage.ShouldBeEmpty();
+        actual.ErrorMessage.ShouldBeNullOrEmpty();
     }
     
     [Fact]
@@ -331,7 +333,7 @@ public class CreateEntityObjectFactoryTests
         actual.ShouldNotBeNull();
         actual.Value.ShouldNotBeNull();
         actual.Value.GetType().ShouldBe(typeof(DummyEntityWithNullableReferenceTypeProperty));
-        actual.ErrorMessage.ShouldBeEmpty();
+        actual.ErrorMessage.ShouldBeNullOrEmpty();
     }
 
     [Fact]

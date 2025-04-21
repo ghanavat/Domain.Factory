@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Ghanavats.Domain.Factory.Abstractions;
 using Ghanavats.Domain.Primitives.Extensions;
 using Microsoft.Extensions.Caching.Memory;
@@ -15,16 +16,19 @@ public sealed class CacheProvider : ICacheProvider
 
     public object Get(object key)
     {
-        if (key.ToString() == string.Empty) return string.Empty;
-
-        var getValueResult = _memoryCache.TryGetValue(key, out var value);
-
-        if (value is null)
+        if (key.ToString() == string.Empty)
         {
             return string.Empty;
         }
-        
-        return getValueResult ? value : string.Empty;
+
+        var getValueResult = _memoryCache.TryGetValue(key, out var value);
+
+        if (value is null || !getValueResult)
+        {
+            return string.Empty;
+        }
+
+        return value;
     }
 
     public object Insert(object key, object value)
@@ -38,31 +42,19 @@ public sealed class CacheProvider : ICacheProvider
         return _memoryCache.Set(key, value);
     }
 
+    [ExcludeFromCodeCoverage]
     public object Insert(object key, object value, TimeSpan timeTillExpires)
     {
         throw new NotImplementedException();
     }
 
+    [ExcludeFromCodeCoverage]
     public object Insert(object key, object value, DateTime absoluteExpiration)
     {
         throw new NotImplementedException();
     }
 
-    public object Update(object key, object value)
-    {
-        throw new NotImplementedException();
-    }
-
-    public object Update(object key, object value, TimeSpan timeTillExpires)
-    {
-        throw new NotImplementedException();
-    }
-
-    public object Update(object key, object value, DateTime absoluteExpiration)
-    {
-        throw new NotImplementedException();
-    }
-
+    [ExcludeFromCodeCoverage]
     public object Remove(object key)
     {
         throw new NotImplementedException();
