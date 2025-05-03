@@ -39,8 +39,8 @@ Under the hood, it uses a static, thread-safe cache to eliminate redundant refle
 protected static ConcurrentDictionary<string, MethodInfo> CachedMethodInfoCollection { get; set; } = new();
 ```
 
-This caching mechanism ensures that each method or constructor lookup is performed only once per unique key,
-and is reused on subsequent factory calls:
+This caching mechanism ensures that each method or constructor lookup is performed only once per unique key 
+and is reused on further factory calls:
 
 ```csharp
 var method = CachedMethodInfoCollection.TryGetValue(cacheKey, out var result)
@@ -134,6 +134,19 @@ Contains the IDomainFactory interface and configuration types like DomainFactory
 Provides core DDD primitives like EntityBase, as well as helpful attributes like [AggregateRoot].
 
 > This is a transitive dependency of Ghanavats.Domain.Factory, so you don’t need to install it separately.
+
+## When Not Use This Package
+The idea behind this package is
+to help developers with a large DDD project and loads of entities and possibly loads of factories,
+to automate the object creation operation. 
+This way you won't be instantiating the factories, this package will. 
+You only need to specify the type you want and the property values your type needs.
+
+For simpler DDD projects or any other type of architecture where you need to have a number of factories, 
+`Ghanavats.Domain.Factory` is overkill.
+Do not add unnecessary complexity to your projects. 
+
+Keep it simple.
 
 ## 🤝 Feedback Welcome
 This package is public and evolving. If you find it useful — or think it's missing something — 
